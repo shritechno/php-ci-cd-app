@@ -10,6 +10,7 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
+             steps {
     sshagent(['ubuntu']) {
         sh '''
         # Upload the entire workspace to a temp folder on EC2
@@ -24,6 +25,7 @@ pipeline {
         '''
     }
 }
+    }
     }
 
     
