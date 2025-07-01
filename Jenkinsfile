@@ -17,11 +17,11 @@ pipeline {
                 rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@13.126.60.153:/home/ubuntu/deploy-temp/
 
                 # Remotely move from temp to web root with sudo
-                ssh -o StrictHostKeyChecking=no ubuntu@13.126.60.153 << EOF
+                ssh -o StrictHostKeyChecking=no ubuntu@13.126.60.153 bash -c "'
                   sudo rm -rf /var/www/html/php-ci-cd-app/*
                   sudo mv /home/ubuntu/deploy-temp/* /var/www/html/php-ci-cd-app/
                   sudo systemctl restart apache2
-                EOF
+                '"
             '''
         }
     }
