@@ -14,7 +14,7 @@ pipeline {
                 sshagent(['ec2-key']) {
                     sh '''
                     scp -o StrictHostKeyChecking=no -r * \
-                      ubuntu@YOUR_EC2_PUBLIC_IP:/var/www/html/php-ci-cd-app/
+                      ubuntu@35.154.166.119:/var/www/html/php-ci-cd-app/
                     ssh -o StrictHostKeyChecking=no ubuntu@YOUR_EC2_PUBLIC_IP \
                       'sudo systemctl restart apache2'
                     '''
