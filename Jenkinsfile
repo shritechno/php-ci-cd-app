@@ -15,7 +15,7 @@ pipeline {
                     sh '''
                     scp -o StrictHostKeyChecking=no -r * \
                       ubuntu@13.126.60.153:/var/www/html/php-ci-cd-app/
-                    ssh -o StrictHostKeyChecking=no ubuntu@YOUR_EC2_PUBLIC_IP \
+                    ssh -o StrictHostKeyChecking=no ubuntu@13.126.60.153 \
                       'sudo systemctl restart apache2'
                     '''
                 }
