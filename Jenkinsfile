@@ -11,7 +11,7 @@ pipeline {
 
         stage('Deploy to EC2') {
              steps {
-    sshagent(['ubuntu']) {
+    sshagent(['ec2-key']) {
         sh '''
         # Upload the entire workspace to a temp folder on EC2
         scp -o StrictHostKeyChecking=no -r * ubuntu@13.126.60.153:/home/ubuntu/deploy-temp/
