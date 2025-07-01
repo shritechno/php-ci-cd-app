@@ -13,11 +13,15 @@ pipeline {
             steps {
                 sshagent(['ec2-key']) {
                     sh '''
-                    # Upload the entire workspace to a temp folder on EC2
-                    scp -o StrictHostKeyChecking=no -r * ubuntu@13.126.60.153:/home/ubuntu/deploy-temp/
+                    # Ensure deploy-temp exists
+                    ssh -o StrictHostKeyChecking=no ubuntu@13.126.60.153 'mkdir -p /home/ubuntu/deploy-temp'
 
-                    # Remotely move from temp to web root with sudo
+                    # Upload all files (including dotfiles) to EC2
+                    scp -o StrictHostKeyChecking=no -r . ubuntu@13.126.60.153:/home/ubuntu/deploy-temp/
+
+                    # Execute remote deployment commands
                     ssh -o StrictHostKeyChecking=no ubuntu@13.126.60.153 << 'EOF'
+                      set -e
                       sudo rm -rf /var/www/html/php-ci-cd-app/*
                       sudo mv /home/ubuntu/deploy-temp/* /var/www/html/php-ci-cd-app/
                       sudo systemctl restart apache2
