@@ -1,13 +1,8 @@
 pipeline {
     agent any
 
-    tools {
-        // Must match the name you configured in Global Tool Config
-        sonarQubeScanner 'SonarScanner'
-    }
-
     environment {
-        SONARQUBE_ENV = 'Sonar-server' // Same as Jenkins → Configure System → SonarQube Name
+        SONARQUBE_ENV = 'SonarQube' // This must match the name configured in Jenkins → Configure System → SonarQube
     }
 
     stages {
@@ -41,7 +36,7 @@ pipeline {
                     sh '''
                         rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@13.126.60.153:/home/ubuntu/deploy-temp/
 
-                        ssh -o StrictHostKeyChecking=no ubuntu@35.154.17.116  bash -c "'
+                        ssh -o StrictHostKeyChecking=no ubuntu@13.126.60.153 bash -c "'
                           sudo rm -rf /var/www/html/php-ci-cd-app/*
                           sudo mv /home/ubuntu/deploy-temp/* /var/www/html/php-ci-cd-app/
                           sudo systemctl restart apache2
