@@ -1,8 +1,8 @@
 pipeline {
     agent any
-
+    
     environment {
-        SONARQUBE_ENV = 'SonarScanner' // Matches Jenkins → Configure System → SonarQube
+        SONARQUBE_ENV = 'SonarScanner' // This must match Jenkins > Manage Jenkins > Configure System > SonarQube installation name
     }
 
     stages {
@@ -17,16 +17,15 @@ pipeline {
             steps {
                 withSonarQubeEnv("${env.SONARQUBE_ENV}") {
                     withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-                        withEnv(["PATH+SONAR=${tool 'SonarScanner'}/bin"]) {
-                            sh '''
-                                sonar-scanner \
-                                  -Dsonar.projectKey=php-ci-cd-app \
-                                  -Dsonar.sources=. \
-                                  -Dsonar.language=php \
-                                  -Dsonar.host.url=http://13.201.26.22:9000/ \
-                                  -Dsonar.login=$SONAR_TOKEN
-                            '''
-                        }
+                        sh '''
+                            sonar-scanner \
+                              -Dsonar.projectKey=php-ci-cd-app \
+                              -Dsonar.sources=. \
+                              -Dsonar.exclusions=**/vendor/**,**/.git/**,**/*.min.js \
+                              -Dsonar.language=php \
+                              -Dsonar.token=$SONAR_TOKEN \
+                              -Dsonar.host.url=http://13.201.26.22:9000/
+                        '''
                     }
                 }
             }
