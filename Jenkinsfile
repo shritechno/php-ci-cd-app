@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        // Add this to inject SonarScanner path
-        sonarQubeScanner 'SonarScanner' // This name must match your Jenkins configuration
-    }
-
     environment {
         SONARQUBE_ENV = 'SonarScanner' // Matches Jenkins → Configure System → SonarQube
     }
