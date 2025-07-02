@@ -1,6 +1,15 @@
 pipeline {
     agent any
 
+    tools {
+        // Must match the name you configured in Global Tool Config
+        sonarQubeScanner 'SonarScanner'
+    }
+
+    environment {
+        SONARQUBE_ENV = 'Sonar-server' // Same as Jenkins → Configure System → SonarQube Name
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -9,24 +18,38 @@ pipeline {
             }
         }
 
-   stage('Deploy to EC2') {
-    steps {
-        sshagent (credentials: ['ec2-key']) {
-            sh '''
-                # Upload the entire workspace to a temp folder on EC2
-                rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@13.126.60.153:/home/ubuntu/deploy-temp/
-
-                # Remotely move from temp to web root with sudo
-                ssh -o StrictHostKeyChecking=no ubuntu@13.126.60.153 bash -c "'
-                  sudo rm -rf /var/www/html/php-ci-cd-app/*
-                  sudo mv /home/ubuntu/deploy-temp/* /var/www/html/php-ci-cd-app/
-                  sudo systemctl restart apache2
-                '"
-            '''
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv("${env.SONARQUBE_ENV}") {
+                    withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            sonar-scanner \
+                              -Dsonar.projectKey=php-ci-cd-app \
+                              -Dsonar.sources=. \
+                              -Dsonar.language=php \
+                              -Dsonar.host.url=$SONARQUBE_URL \
+                              -Dsonar.login=$SONAR_TOKEN
+                        '''
+                    }
+                }
+            }
         }
-    }
-}
 
+        stage('Deploy to EC2') {
+            steps {
+                sshagent (credentials: ['ec2-key']) {
+                    sh '''
+                        rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@13.126.60.153:/home/ubuntu/deploy-temp/
+
+                        ssh -o StrictHostKeyChecking=no ubuntu@35.154.17.116  bash -c "'
+                          sudo rm -rf /var/www/html/php-ci-cd-app/*
+                          sudo mv /home/ubuntu/deploy-temp/* /var/www/html/php-ci-cd-app/
+                          sudo systemctl restart apache2
+                        '"
+                    '''
+                }
+            }
+        }
     }
 
     post {
