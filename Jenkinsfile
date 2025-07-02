@@ -1,48 +1,57 @@
 pipeline {
     agent any
-
-    tools {
-        // Load the SonarScanner tool installed in Jenkins (must match the name you gave it in Global Tool Config)
-        sonarRunner 'SonarScanner'
-    }
+    
 
     environment {
-        SONAR_TOKEN = credentials('sonar-token') // or however you set your credentials
+        SONARQUBE_ENV = 'SonarScanner' // This must match the name configured in Jenkins → Configure System → SonarQube
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/shritechno/php-ci-cd-app.git'
+                git branch: 'main',
+                    url: 'https://github.com/shritechno/php-ci-cd-app.git'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarScanner') {
-                    sh """
-                        ${tool 'SonarScanner'}/bin/sonar-scanner \
-                        -Dsonar.projectKey=php-ci-cd-app \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://13.201.26.22:9000/ \
-                        -Dsonar.login=$SONAR_TOKEN
-                    """
+                withSonarQubeEnv("${env.SONARQUBE_ENV}") {
+                    withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            sonar-scanner \
+                              -Dsonar.projectKey=php-ci-cd-app \
+                              -Dsonar.sources=. \
+                              -Dsonar.language=php \
+                              -Dsonar.host.url=http://13.201.26.22:9000/ \
+                              -Dsonar.login=$SONAR_TOKEN
+                        '''
+                    }
                 }
             }
         }
 
         stage('Deploy to EC2') {
-            when {
-                expression { currentBuild.currentResult == 'SUCCESS' }
-            }
             steps {
-                echo 'Deploying to EC2...'
-                // Your deploy steps here
+                sshagent (credentials: ['ec2-key']) {
+                    sh '''
+                        rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@13.126.60.153:/home/ubuntu/deploy-temp/
+
+                        ssh -o StrictHostKeyChecking=no ubuntu@13.126.60.153 bash -c "'
+                          sudo rm -rf /var/www/html/php-ci-cd-app/*
+                          sudo mv /home/ubuntu/deploy-temp/* /var/www/html/php-ci-cd-app/
+                          sudo systemctl restart apache2
+                        '"
+                    '''
+                }
             }
         }
     }
 
     post {
+        success {
+            echo '✅ PHP App Deployed Successfully!'
+        }
         failure {
             echo '❌ Build or Deployment Failed!'
         }
