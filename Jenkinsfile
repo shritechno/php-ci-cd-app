@@ -8,6 +8,7 @@ pipeline {
                     url: 'https://github.com/shritechno/php-ci-cd-app.git'
             }
         }
+        
 
    stage('Deploy to EC2') {
     steps {
