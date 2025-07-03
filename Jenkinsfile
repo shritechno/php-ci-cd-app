@@ -13,7 +13,7 @@ pipeline {
    
      stage('Deploy to EC2') {
     steps {
-        sshagent (credentials: ['ubuntu']) {
+        sshagent (credentials: ['ec2-key']) {
             sh '''
             rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@13.126.165.208:/home/ubuntu/deploy-temp/
 
