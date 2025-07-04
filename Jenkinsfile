@@ -15,9 +15,9 @@ pipeline {
     steps {
         sshagent (credentials: ['ec2-key']) {
             sh '''
-            rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@13.126.165.208:/home/ubuntu/deploy-temp/
+            rsync -avz --exclude='.git' -e "ssh -o StrictHostKeyChecking=no" ./ ubuntu@43.204.235.115:/home/ubuntu/deploy-temp/
 
-            ssh -o StrictHostKeyChecking=no ubuntu@13.126.165.208 bash -c '
+            ssh -o StrictHostKeyChecking=no ubuntu@43.204.235.115 bash -c '
               sudo rm -rf /var/www/html/php-ci-cd-app/*
               sudo mv /home/ubuntu/deploy-temp/* /var/www/html/php-ci-cd-app/
               sudo systemctl restart apache2
